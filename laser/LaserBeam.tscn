@@ -1,0 +1,121 @@
+[gd_scene load_steps=5 format=1]
+
+[ext_resource path="res://laser/laser_beam1.png" type="Texture" id=1]
+[ext_resource path="res://laser/LaserBeam.gd" type="Script" id=2]
+
+[sub_resource type="Animation" id=1]
+
+resource/name = "scroll"
+length = 1.0
+loop = true
+step = 0.1
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:uv")
+tracks/0/interp = 1
+tracks/0/imported = false
+tracks/0/keys = { "times":FloatArray( 0, 1 ), "transitions":FloatArray( 1, 1 ), "update":0, "values":[ Vector2Array( 0, 0, 16, 0, 16, 64, 0, 64 ), Vector2Array( 0, -64, 16, -64, 16, 0, 0, 0 ) ] }
+
+[sub_resource type="Animation" id=2]
+
+length = 1.0
+loop = true
+step = 0.1
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:uv")
+tracks/0/interp = 1
+tracks/0/imported = false
+tracks/0/keys = { "times":FloatArray( 0, 1 ), "transitions":FloatArray( 1, 1 ), "update":0, "values":[ Vector2Array( 0, 0, 16, 0, 16, 64, 0, 64 ), Vector2Array( 0, 64, 16, 64, 16, 128, 0, 128 ) ] }
+
+[node name="Node2D" type="Node2D"]
+
+[node name="Polygon2D" type="Polygon2D" parent="."]
+
+visibility/self_opacity = 0.1
+visibility/blend_mode = 1
+polygon = Vector2Array( -24, 0, 24, 0, 24, 32, -24, 32 )
+uv = Vector2Array( 0, 29.2434, 16, 29.2434, 16, 93.2434, 0, 93.2434 )
+color = Color( 1, 0, 0, 0.37702 )
+vertex_colors = ColorArray(  )
+offset = Vector2( 0, 0 )
+texture/texture = ExtResource( 1 )
+texture/offset = Vector2( 0, 0 )
+texture/scale = Vector2( 1, 1 )
+texture/rotation = 0.0
+invert/enable = false
+invert/border = 100.0
+script/script = ExtResource( 2 )
+
+[node name="1" type="Polygon2D" parent="Polygon2D"]
+
+visibility/self_opacity = 0.1
+visibility/behind_parent = true
+visibility/blend_mode = 1
+polygon = Vector2Array( -12, 0, 12, 0, 12, 32, -12, 32 )
+uv = Vector2Array( 0, 0, 16, 0, 16, 64, 0, 64 )
+color = Color( 1, 0.445313, 0, 0.781412 )
+vertex_colors = ColorArray(  )
+offset = Vector2( 0, 0 )
+texture/texture = ExtResource( 1 )
+texture/offset = Vector2( 0, 0 )
+texture/scale = Vector2( 1, 1 )
+texture/rotation = 0.0
+invert/enable = false
+invert/border = 100.0
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Polygon2D/1"]
+
+playback/process_mode = 1
+playback/default_blend_time = 0.0
+root/root = NodePath("..")
+anims/scroll = SubResource( 1 )
+playback/active = true
+playback/speed = 3.0
+blend_times = [  ]
+autoplay = "scroll"
+
+[node name="2" type="Polygon2D" parent="Polygon2D"]
+
+visibility/self_opacity = 0.1
+visibility/behind_parent = true
+visibility/blend_mode = 1
+polygon = Vector2Array( -4, 0, 4, 0, 4, 32, -4, 32 )
+uv = Vector2Array( 0, 0, 16, 0, 16, 64, 0, 64 )
+color = Color( 0.691406, 0.691406, 0.691406, 1 )
+vertex_colors = ColorArray(  )
+offset = Vector2( 0, 0 )
+texture/texture = ExtResource( 1 )
+texture/offset = Vector2( 0, 0 )
+texture/scale = Vector2( 1, 1 )
+texture/rotation = 0.0
+invert/enable = false
+invert/border = 100.0
+
+[node name="3" type="Polygon2D" parent="Polygon2D"]
+
+visibility/self_opacity = 0.1
+visibility/behind_parent = true
+visibility/blend_mode = 1
+polygon = Vector2Array( -24, 0, 24, 0, 24, 32, -24, 32 )
+uv = Vector2Array( 0, 0, 16, 0, 16, 64, 0, 64 )
+color = Color( 1, 0, 0, 0.15298 )
+vertex_colors = ColorArray(  )
+offset = Vector2( 0, 0 )
+texture/texture = ExtResource( 1 )
+texture/offset = Vector2( 0, 0 )
+texture/scale = Vector2( 1, 1 )
+texture/rotation = 0.0
+invert/enable = false
+invert/border = 100.0
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Polygon2D"]
+
+playback/process_mode = 1
+playback/default_blend_time = 0.0
+root/root = NodePath("..")
+anims/scroll = SubResource( 2 )
+playback/active = true
+playback/speed = 1.0
+blend_times = [  ]
+autoplay = "scroll"
+
+

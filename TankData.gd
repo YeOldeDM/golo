@@ -1,6 +1,7 @@
 extends PanelContainer
 
 func _ready():
+	pass
 	sync(get_node('/root/Main/Tank'))
 
 func sync(to):

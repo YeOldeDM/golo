@@ -3,8 +3,8 @@ var owned_by
 var aim_range
 var start_pos
 
-var speed = 2400
-var damage = 5
+export var speed = 1000
+export(float) var damage = 1
 
 func Fire(owner, origin, angle, distance):
 	owned_by = owner
@@ -16,21 +16,21 @@ func Fire(owner, origin, angle, distance):
 
 func kill():
 	var puff = preload('res://SmokePuff.tscn').instance()
-	puff.set_param(puff.PARAM_DIRECTION,-get_rotd())
 	get_parent().add_child(puff)
 	puff.set_pos(get_pos())
+	puff.set_rot(get_rot())
 	queue_free()
 
 func _fixed_process(delta):
 	move(get_transform().y*delta*speed)
 	if get_pos().distance_to(start_pos) >= aim_range:
 		kill()
-	var s = get_node('Sprite').get_scale()
-	s.y += speed*delta*0.01
-	get_node('Sprite').set_scale(s)
+#	var s = get_node('Sprite').get_scale()
+#	s.y += speed*delta*0.01
+#	get_node('Sprite').set_scale(s)
 
 func _on_HitBox_body_enter( body ):
 	if body != owned_by:
 		if body.has_method('take_damage'):
 			body.take_damage(self)
-	kill()
+		kill()

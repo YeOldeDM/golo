@@ -9,7 +9,7 @@ var target = null setget _set_target
 var armor = 200
 var damage_taken = 0 setget _set_damage_taken
 
-var turret_turn_rate = 5.0
+var turret_turn_rate = 12.0
 
 func get_target_pos():
 	if target != null:
@@ -23,7 +23,12 @@ func take_damage(source):
 	self.damage_taken = damage_taken + dmg
 
 func shoot():
-	get_node('Weapon').Fire()
+	var turret = get_node('Turret')
+	var tr = turret.get_global_transform()
+	var origin = tr.o + (tr.y*32)
+	var angle = turret.get_rot()+get_rot()
+	var distance = get_pos().distance_to(target.get_pos())-32
+	get_node('Weapon').Fire(origin,angle,distance)
 
 func die():
 	print(get_name()+" IS ESPLODE")
@@ -43,7 +48,6 @@ func _set_damage_taken(what):
 	if damage_taken >= armor:
 		die()
 	var n = 1-(1.0*damage_taken/armor)
-	print(n)
 	var fire_delay = lerp(0.1, 1.0, n)
 	get_node('TriggerTime').set_wait_time(fire_delay)
 	if get_node('TriggerTime').get_time_left()==0:

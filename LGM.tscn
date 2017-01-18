@@ -1,13 +1,17 @@
-[gd_scene load_steps=3 format=1]
+[gd_scene load_steps=7 format=1]
 
-[ext_resource path="res://lgm.png" type="Texture" id=1]
+[ext_resource path="res://LGM.gd" type="Script" id=1]
+[ext_resource path="res://lgm.png" type="Texture" id=2]
+[ext_resource path="res://8dir_guide.png" type="Texture" id=3]
+[ext_resource path="res://bigflare.png" type="Texture" id=4]
+[ext_resource path="res://Tank/Weapon.gd" type="Script" id=5]
 
 [sub_resource type="CircleShape2D" id=1]
 
 custom_solver_bias = 0.0
-radius = 7.07107
+radius = 8.0
 
-[node name="KinematicBody2D" type="KinematicBody2D"]
+[node name="Greenman" type="KinematicBody2D"]
 
 input/pickable = false
 shapes/0/shape = SubResource( 1 )
@@ -16,18 +20,83 @@ shapes/0/trigger = false
 collision/layers = 1
 collision/mask = 1
 collision/margin = 0.08
+script/script = ExtResource( 1 )
 
 [node name="Sprite" type="Sprite" parent="."]
 
-texture = ExtResource( 1 )
+texture = ExtResource( 2 )
 offset = Vector2( 0, -8 )
 vframes = 2
-hframes = 2
+hframes = 4
+
+[node name="Sprite1" type="Sprite" parent="."]
+
+visibility/visible = false
+visibility/behind_parent = true
+transform/scale = Vector2( 2, 2 )
+texture = ExtResource( 3 )
+modulate = Color( 1, 0.863281, 0.863281, 0.387961 )
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 
 shape = SubResource( 1 )
 trigger = false
 _update_shape_index = 0
+
+[node name="Camera" type="Camera2D" parent="."]
+
+anchor_mode = 1
+rotating = false
+current = true
+zoom = Vector2( 1, 1 )
+limit/left = -10000000
+limit/top = -10000000
+limit/right = 10000000
+limit/bottom = 10000000
+drag_margin/h_enabled = false
+drag_margin/v_enabled = false
+smoothing/enable = true
+smoothing/speed = 5.0
+drag_margin/left = 0.2
+drag_margin/top = 0.2
+drag_margin/right = 0.2
+drag_margin/bottom = 0.2
+
+[node name="Light2D" type="Light2D" parent="."]
+
+enabled = true
+editor_only = false
+texture = ExtResource( 4 )
+offset = Vector2( 0, 0 )
+scale = 1.0
+color = Color( 1, 1, 1, 1 )
+energy = 1.0
+mode = 0
+range/height = 10.0
+range/z_min = -1024
+range/z_max = 1024
+range/layer_min = 0
+range/layer_max = 0
+range/item_mask = 1
+shadow/enabled = false
+shadow/color = Color( 0, 0, 0, 0 )
+shadow/buffer_size = 2048
+shadow/esm_multiplier = 80.0
+shadow/item_mask = 1
+
+[node name="Weapon" type="Node" parent="."]
+
+script/script = ExtResource( 5 )
+name = "LMG"
+fire_delay = 0.03
+autofire = true
+bullet = "res://MG_Bullet.tscn"
+
+[node name="Timer" type="Timer" parent="Weapon"]
+
+process_mode = 1
+wait_time = 1.0
+one_shot = false
+autostart = false
 
 
