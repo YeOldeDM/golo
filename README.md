@@ -1,6 +1,6 @@
-# golo
+# G O L O  
 
-Controls:
+Controls:  
 W - Accelerate 			| 	walk up  
 S - Decelerate/Reverse 	| 	walk down  
 A - Turn left 			| 	walk left  
