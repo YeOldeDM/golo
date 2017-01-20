@@ -54,11 +54,15 @@ var is_using = false
 
 var laser
 
+
+
+
 func activate(lgm=null):
 	get_node('Camera').make_current()
 	self.active = true
 	if lgm:
 		lgm.call_deferred('deactivate')
+
 
 func deactivate():
 	self.active = false
@@ -99,6 +103,167 @@ func kill():
 
 func get_target_pos():
 	return get_node('../Aimer').get_pos()
+
+
+
+func _fixed_process(delta):
+	# Check exit point clearance
+	self.can_deploy = get_node('LGMDeploy').get_overlapping_bodies().empty()
+	
+	# Get map position
+	var map = get_node('../TileMap')
+	var map_pos = map.world_to_map(get_pos())
+	
+	# Get/set ground surface
+	var newground = map.get_cell(map_pos.x,map_pos.y)
+	if newground != groundID: self.groundID = newground
+	
+	# Input flags
+	var FORWARD = Input.is_action_pressed('forward')
+	var BACK = Input.is_action_pressed('back')
+	var LEFT = Input.is_action_pressed('turn_left')
+	var RIGHT = Input.is_action_pressed('turn_right')
+	var SHOOT = Input.is_action_pressed('shoot')
+	var USE = Input.is_action_pressed('use_vehicle')
+	
+	# Get forward vector
+	var tr = get_transform().y
+	
+	# Get/set top speed
+	var new_top_speed = max_speed * terrain_speed_factor * damage_speed_factor
+	if new_top_speed != self.top_speed:
+		self.top_speed = new_top_speed
+	
+	# Get current speed
+	var new_current_speed = self.current_speed
+	
+	# Accelerate
+	if active and FORWARD and current_speed <= top_speed:
+		new_current_speed += min(acceleration*delta, top_speed-current_speed)
+	
+	# Decelerate/Reverse
+	elif active and BACK and current_speed >= -top_speed*0.75:
+		new_current_speed -= min(acceleration*delta, top_speed-current_speed)
+	
+	# Dampen toward Zero if no input or over top speed
+	else:
+		var s = sign(current_speed)
+		var v = abs(current_speed)
+		v -= delta * friction
+		new_current_speed = s*max(0,v)
+	
+	# Set current speed
+	if new_current_speed != self.current_speed:
+		self.current_speed = new_current_speed
+	
+	# Get top turn rate. Decrease turn rate as speed increases
+	var new_top_turn_rate = max_turn_rate * max(min_turn_rate,1.0-abs(current_speed)/top_speed)
+	# Get current turn rate
+	var new_turn_rate = self.current_turn_rate
+	
+	# Steer counter-clockwise
+	if active and LEFT and current_turn_rate < top_turn_rate:
+		new_turn_rate += min(turn_acceleration * delta, top_turn_rate - current_turn_rate)
+	
+	# Steer clockwise
+	elif active and RIGHT and current_turn_rate > -top_turn_rate:
+		new_turn_rate -= min(turn_acceleration * delta, top_turn_rate - current_turn_rate)
+	
+	# Dampen turning toward Zero if no input or speeding
+	else:
+		var s = sign(current_turn_rate)
+		var v = abs(current_turn_rate)
+		v -= delta * friction * 0.1
+		new_turn_rate = s*max(0,v)
+	
+	# Set top turn rate
+	if new_top_turn_rate != self.top_turn_rate:
+		self.top_turn_rate = new_top_turn_rate
+	
+	# Set current turn rate
+	new_turn_rate = min(new_turn_rate, top_turn_rate)
+	if new_turn_rate != self.current_turn_rate:
+		self.current_turn_rate = new_turn_rate
+	
+	# Apply linear force
+	var motion = move(tr*delta*current_speed)
+	# Convert extra motion to speed decrease
+	self.current_speed -= motion.length()*sign(current_speed)
+	
+	# Apply angular force
+	rotate(delta*current_turn_rate)
+	
+	if active:
+		# Aim the turret
+		# get
+		var mpos = get_global_mouse_pos()
+		var ang = get_node('Turret').get_angle_to(mpos)
+		var rot = get_node('Turret').get_rot()
+		# set
+		rot += (ang*delta*turret_turn_rate)
+		self.turret_rot = clamp(rot,deg2rad(-turret_fov),deg2rad(turret_fov))
+		# get_node('Turret').rotate(ang*delta*turret_turn_rate)
+		get_node('../Aimer').set_pos(mpos)
+		
+		# Shoot a bullet
+		
+		if !is_shooting and SHOOT:
+			shoot()
+		is_shooting = SHOOT
+		
+		# Offset camera to follow
+		# A point ahead of current motion
+		# vector.
+		var cam_offset = tr*current_speed*0.5
+		# effect offset to follow mouse
+		cam_offset += (mpos - get_pos())/5
+		get_node('Camera').set_offset(cam_offset)
+	
+	# Manage trackprint emitters
+	if abs(current_speed) > 0.02:
+		for node in get_node('Tracks').get_children():
+			node.set_emitting(true)
+	else:
+		for node in get_node('Tracks').get_children():
+			node.set_emitting(false)
+	
+
+	
+	
+	# Use_vehicle interaction..
+	if active and USE and not is_using:
+		exit_tank()
+	is_using = USE
+
+
+
+
+func _set_damage_taken(what):
+	damage_taken = what
+	self.damage_speed_factor = lerp(0.25,1.0,1.0-(damage_taken/armor))
+	if damage_taken > armor:
+		die()
+	
+	get_node('ArmorRight').set_value(damage_taken)
+	get_node('ArmorLeft').set_value(damage_taken)
+
+
+func _set_turret_rot(what):
+	turret_rot = what
+	get_node('Turret').set_rot(turret_rot)
+
+
+func _set_drive_fx_speed(what):
+	drive_fx_speed = what
+	get_node('SfxDrive').set('params/pitch_scale', drive_fx_speed)
+
+func _set_track_anim_speeds(what):
+	track_anim_speeds = what
+	if track_anim_speeds[0] != get_node('TrackLeft/Animator').get_speed():
+		get_node('TrackLeft/Animator').set_speed(track_anim_speeds[0])
+	if track_anim_speeds[1] != get_node('TrackRight/Animator').get_speed():
+		get_node('TrackRight/Animator').set_speed(track_anim_speeds[1])
+
 
 func _set_current_turn_rate(what):
 	current_turn_rate = min(what,top_turn_rate)
@@ -148,139 +313,3 @@ func _ready():
 	get_node('ArmorLeft').set_value(damage_taken)
 	set_fixed_process(true)
 	get_node('SfxDrive').play('tank_drive')
-	
-
-
-
-func _fixed_process(delta):
-	self.can_deploy = get_node('LGMDeploy').get_overlapping_bodies().empty()
-	var map = get_node('../TileMap')
-	var map_pos = map.world_to_map(get_pos())
-	var newground = map.get_cell(map_pos.x,map_pos.y)
-	if newground != groundID: self.groundID = newground
-	
-	var FORWARD = Input.is_action_pressed('forward')
-	var BACK = Input.is_action_pressed('back')
-	var LEFT = Input.is_action_pressed('turn_left')
-	var RIGHT = Input.is_action_pressed('turn_right')
-	
-	var SHOOT = Input.is_action_pressed('shoot')
-	
-	var USE = Input.is_action_pressed('use_vehicle')
-	
-	# Get forward vector
-	var tr = get_transform().y
-	
-	self.top_speed = max_speed * terrain_speed_factor * damage_speed_factor
-	# Accelerate
-	var new_current_speed = self.current_speed
-	if active and FORWARD and current_speed <= top_speed:
-		new_current_speed += min(acceleration*delta, top_speed-current_speed)
-	# Decelerate/Reverse (at half speed)
-	elif active and BACK and current_speed >= -top_speed*0.75:
-		new_current_speed -= min(acceleration*delta, top_speed-current_speed)
-	# Dampen toward Zero if no input
-	elif not FORWARD and not BACK:
-		var s = sign(current_speed)
-		var v = abs(current_speed)
-		v -= delta * friction
-		new_current_speed = s*max(0,v)
-	if new_current_speed != self.current_speed:
-		self.current_speed = new_current_speed
-	# Decrease turn rate as speed increases
-	var new_top_turn_rate = max_turn_rate * max(min_turn_rate,1.0-abs(current_speed)/top_speed)
-	var new_turn_rate = self.current_turn_rate
-	# Steer counter-clockwise
-	if active and LEFT and current_turn_rate < top_turn_rate:
-		new_turn_rate += min(turn_acceleration * delta, top_turn_rate - current_turn_rate)
-	# Steer clockwise
-	elif active and RIGHT and current_turn_rate > -top_turn_rate:
-		new_turn_rate -= min(turn_acceleration * delta, top_turn_rate - current_turn_rate)
-	# Dampen toward Zero if no input
-	elif not RIGHT and not LEFT:
-		var s = sign(current_turn_rate)
-		var v = abs(current_turn_rate)
-		v -= delta * friction * 0.1
-		new_turn_rate = s*max(0,v)
-	
-	if new_top_turn_rate != self.top_turn_rate:
-		self.top_turn_rate = new_top_turn_rate
-	
-	new_turn_rate = min(new_turn_rate, top_turn_rate)
-	if new_turn_rate != self.current_turn_rate:
-		self.current_turn_rate = new_turn_rate
-	
-	# Apply linear force
-	var motion = move(tr*delta*current_speed)
-	# Prevent wall-humping acceleration
-	self.current_speed -= motion.length()*sign(current_speed)
-	
-	# Apply angular force
-	rotate(delta*current_turn_rate)
-	
-	if active:
-		# Aim the turret
-		# get
-		var mpos = get_global_mouse_pos()
-		var ang = get_node('Turret').get_angle_to(mpos)
-		var rot = get_node('Turret').get_rot()
-		# set
-		rot += (ang*delta*turret_turn_rate)
-		self.turret_rot = clamp(rot,deg2rad(-turret_fov),deg2rad(turret_fov))
-		# get_node('Turret').rotate(ang*delta*turret_turn_rate)
-		get_node('../Aimer').set_pos(mpos)
-		
-		# Shoot a bullet
-		
-		if !is_shooting and SHOOT:
-			shoot()
-		is_shooting = SHOOT
-		
-		# Offset camera to follow
-		# A point ahead of current motion
-		# vector.
-		var cam_offset = tr*current_speed*0.5
-		# effect offset to follow mouse
-		cam_offset += (mpos - get_pos())/5
-		get_node('Camera').set_offset(cam_offset)
-		
-	if abs(current_speed) > 0.02:
-		for node in get_node('Tracks').get_children():
-			node.set_emitting(true)
-	else:
-		for node in get_node('Tracks').get_children():
-			node.set_emitting(false)
-	
-
-	
-	
-	
-	if active and USE and not is_using:
-		exit_tank()
-	is_using = USE
-	
-func _set_damage_taken(what):
-	damage_taken = what
-	self.damage_speed_factor = lerp(0.25,1.0,1.0-(damage_taken/armor))
-	if damage_taken > armor:
-		die()
-	
-	get_node('ArmorRight').set_value(damage_taken)
-	get_node('ArmorLeft').set_value(damage_taken)
-
-
-func _set_turret_rot(what):
-	turret_rot = what
-	get_node('Turret').set_rot(turret_rot)
-
-
-func _set_drive_fx_speed(what):
-	drive_fx_speed = what
-	get_node('SfxDrive').set('params/pitch_scale', drive_fx_speed)
-
-func _set_track_anim_speeds(what):
-	track_anim_speeds = what
-	if track_anim_speeds[0] != get_node('TrackLeft/Animator').get_speed():
-		get_node('TrackLeft/Animator').set_speed(track_anim_speeds[0])
-	if track_anim_speeds[1] != get_node('TrackRight/Animator').get_speed():
-		get_node('TrackRight/Animator').set_speed(track_anim_speeds[1])
