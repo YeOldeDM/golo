@@ -2,8 +2,7 @@ extends KinematicBody2D
 
 var laserbeam = preload('res://laser/LaserBeam.tscn')
 
-var max_speed = 120
-var terrain_speed_factor = 1.0
+var max_speed = 240
 var damage_speed_factor = 1.0
 signal top_speed_changed(what)
 var top_speed = 300 setget _set_top_speed
@@ -33,7 +32,6 @@ var turret_turn_rate = 5.4
 
 var min_aim_range = 40
 
-var friction = 6.0
 
 
 var is_shooting=false
@@ -46,6 +44,7 @@ var active = true
 
 signal groundID_changed(what)
 var groundID = -1 setget _set_groundID
+var terrain_on = {'name':'NA','speed':1.0,'friction':1.0}
 
 var armor = 150
 var damage_taken = 0 setget _set_damage_taken
@@ -130,7 +129,7 @@ func _fixed_process(delta):
 	var tr = get_transform().y
 	
 	# Get/set top speed
-	var new_top_speed = max_speed * terrain_speed_factor * damage_speed_factor
+	var new_top_speed = max_speed * terrain_on.speed * damage_speed_factor
 	if new_top_speed != self.top_speed:
 		self.top_speed = new_top_speed
 	
@@ -149,9 +148,11 @@ func _fixed_process(delta):
 	else:
 		var s = sign(current_speed)
 		var v = abs(current_speed)
-		v -= delta * friction
+		v -= delta * terrain_on.friction
 		new_current_speed = s*max(0,v)
-	
+
+
+	new_current_speed = clamp(new_current_speed,-top_speed, top_speed)
 	# Set current speed
 	if new_current_speed != self.current_speed:
 		self.current_speed = new_current_speed
@@ -173,7 +174,7 @@ func _fixed_process(delta):
 	else:
 		var s = sign(current_turn_rate)
 		var v = abs(current_turn_rate)
-		v -= delta * friction * 0.1
+		v -= delta * terrain_on.friction
 		new_turn_rate = s*max(0,v)
 	
 	# Set top turn rate
@@ -288,8 +289,8 @@ func _set_top_speed(what):
 func _set_current_speed(what):
 	current_speed = what
 	emit_signal('speed_changed',current_speed)
-	var new_track_anim_left = (current_speed/32)+(current_turn_rate)
-	var new_track_anim_right = (current_speed/32)+(-current_turn_rate)
+	var new_track_anim_left = (current_speed/64)+(current_turn_rate)
+	var new_track_anim_right = (current_speed/64)+(-current_turn_rate)
 	if new_track_anim_left != track_anim_speeds[0]:
 		self.track_anim_speeds[0] = new_track_anim_left
 	if new_track_anim_right != track_anim_speeds[1]:
@@ -302,8 +303,7 @@ func _set_current_speed(what):
 func _set_groundID(what):
 	if what == groundID:return
 	groundID = what
-	self.terrain_speed_factor = [1.25,1.0,1.0][groundID]
-	self.friction = [20.0,1.0,100.0][groundID]
+	self.terrain_on = Game.terrain[groundID]
 	emit_signal('groundID_changed',groundID)
 
 func _ready():

@@ -18,7 +18,7 @@ func _on_top_speed_changed(what):
 	get_node('box/Speed/Max').set_text(str(int(what)))
 
 func _on_ground_changed(what):
-	get_node('box/Ground/Value').set_text(['Road','Wall','Grass'][what])
+	get_node('box/Ground/Value').set_text(Game.terrain[what].name)
 
 func _on_turn_rate_changed(what):
 	get_node('box/TurnRate/Value').set_text(str(abs(ceil(rad2deg(what)))))
