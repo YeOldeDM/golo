@@ -1,6 +1,6 @@
 [gd_scene format=1]
 
-[node name="Tank" type="KinematicBody2D"]
+[node name="Guy" type="KinematicBody2D"]
 
 input/pickable = false
 collision/layers = 1

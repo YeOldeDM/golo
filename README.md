@@ -1,11 +1,17 @@
-# G O L O  
+# tileset_plugin
+A plugin for the Godot Game Engine, to help creating/changing tileset scene.
 
-Controls:  
-W - Accelerate 			| 	walk up  
-S - Decelerate/Reverse 	| 	walk down  
-A - Turn left 			| 	walk left  
-D - Turn Right 			| 	walk right  
-Spacebar - Exit tank 	| 	Enter tank  
+# Howto
+## create tile with a StaticBody2D and collisionPolygon
+![](https://gifyu.com/images/set_collision_polygon5d645.gif)
+## create multiple tiles with Collision, Navigation and LightOccluder nodes
+![](https://gifyu.com/images/multicreate.gif)
+## multi select tiles
+![](https://gifyu.com/images/multiselect_ede64.gif)
 
-Aim your weapon with the mouse  
-Left click - Fire weapon  
+# Instalation
+- create addons folder in project
+- copy tileset_plugin folder into addons folder
+- open project settings and activate plugin
+
+
