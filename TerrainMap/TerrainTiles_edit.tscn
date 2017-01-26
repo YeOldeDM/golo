@@ -50,8 +50,6 @@ lossy_quality = 0.7
 
 [node name="TerrainTiles" type="Node"]
 
-editor/display_folded = true
-
 [node name="deepwater" type="Sprite" parent="."]
 
 transform/pos = Vector2( 128, 0 )
